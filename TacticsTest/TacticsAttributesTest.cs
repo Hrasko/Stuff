@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Tactics;
 
 namespace TacticsTest
 {
@@ -9,10 +10,10 @@ namespace TacticsTest
         [TestMethod]
         public void XP0Value10()
         {
-            AtributtesTactics ta = new AtributtesTactics();
+            Atributtes ta = new Atributtes();
             ta.id = 0;
             ta.initValue = 10;
-            CharacterTactics tc = new CharacterTactics();
+            Character tc = new Character();
             tc.attributesXP = new float[1];
             tc.attributesXP[0] = 0;
 
@@ -24,10 +25,10 @@ namespace TacticsTest
         [TestMethod]
         public void XP1Value11()
         {
-            AtributtesTactics ta = new AtributtesTactics();
+            Atributtes ta = new Atributtes();
             ta.id = 0;
             ta.initValue = 10;
-            CharacterTactics tc = new CharacterTactics();
+            Character tc = new Character();
             tc.attributesXP = new float[1];
             tc.attributesXP[0] = 1;
 
@@ -39,10 +40,10 @@ namespace TacticsTest
         [TestMethod]
         public void XP2and5Value11()
         {
-            AtributtesTactics ta = new AtributtesTactics();
+            Atributtes ta = new Atributtes();
             ta.id = 0;
             ta.initValue = 10;
-            CharacterTactics tc = new CharacterTactics();
+            Character tc = new Character();
             tc.attributesXP = new float[1];
             tc.attributesXP[0] = 2.5f;
 
@@ -54,17 +55,17 @@ namespace TacticsTest
         [TestMethod]
         public void XP3and5Value12()
         {
-            AtributtesTactics ta = new AtributtesTactics();
+            Atributtes ta = new Atributtes();
             ta.id = 0;
             ta.initValue = 10;
-            CharacterTactics tc = new CharacterTactics();
+            Character tc = new Character();
             tc.attributesXP = new float[1];
             tc.attributesXP[0] = 3.5f;
 
             float value = ta.Value(tc);
 
             Assert.AreEqual(value, 12);
-        }
+        }       
 
     }
 }
