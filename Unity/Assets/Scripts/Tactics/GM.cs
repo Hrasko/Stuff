@@ -13,9 +13,26 @@ namespace Tactics
         
         static GM master;
 
+		void Awake()
+		{
+			InputController.ResetInput();
+		}
+
         void Start()
         {
-            master = this;
+            master = this;			
+        }
+
+        /// <summary>
+        /// TODO: delete this in final version
+        /// </summary>
+        public void sampletest1()
+        {
+            GameObject go =  Instantiate (Resources.Load("CharTest"), transform.position, transform.rotation) as GameObject;
+			go.SendMessage ("setCharacter", newCharacter());
+			Character character = go.GetComponent<CharacterBehaviour> ().details;
+			character.baseSpeed = 6;
+			character.actions.Add (new NormalMovement ());
         }
 
         public static void action()

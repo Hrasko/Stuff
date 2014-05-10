@@ -13,5 +13,10 @@
         {
             throw new System.NotImplementedException();
         }
+
+        protected override int getRange(Character actor)
+        {
+            return actor.Speed;
+        }
     }
 }

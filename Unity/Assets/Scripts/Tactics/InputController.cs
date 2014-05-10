@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Tactics
 {
@@ -7,6 +8,7 @@ namespace Tactics
     {
         public static event InputSelection onStartInput;
         public static event InputSelection onMouseOver;
+		//public static event InputSelection onSelect;
         static InputCallback callback;
         public static int range;
 
@@ -33,10 +35,12 @@ namespace Tactics
             {
                 case InputSelectionType.Area: return AreaSelection;
                 case InputSelectionType.Single: return SingleTileSelection;
+                case InputSelectionType.Edition: return MapEdition;
                 default: return DoNothing;
             }
         }
 
+        // Selection Area
         public static void AreaSelection(Tile center, int tileStatusIndex)
         {
             Tile.ResetEspecificMapStatus(tileStatusIndex);
@@ -87,6 +91,19 @@ namespace Tactics
 
         }
 
+        public static void MapEdition(Tile center, int tileStatusIndex)
+        {
+            if (Input.GetKeyDown(KeyCode.Plus))
+            {
+                center.height += 1;
+            }
+            else if (Input.GetKeyDown(KeyCode.Minus))
+            {
+                center.height += 1;
+            }
+        }
+
+        // Events
         public static void OnInputStart(Tile startLocation)
         {
             onStartInput(startLocation, Tile.INAREA);
@@ -106,6 +123,7 @@ namespace Tactics
 
         public static void OnMouseSelect(Tile tile)
         {
+			Tile.ResetEspecificMapStatus(Tile.SELECTED);
             Tile.changeStatus(Tile.SELECTABLE, Tile.SELECTED);
         }
 

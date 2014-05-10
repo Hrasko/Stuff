@@ -21,9 +21,11 @@
 
     public enum InputSelectionType
     {
+        None,
         Single,
         Area,
-        Cone
+        Cone,
+        Edition
     }
 
     public enum TargetingType

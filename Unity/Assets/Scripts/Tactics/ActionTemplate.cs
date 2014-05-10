@@ -6,14 +6,13 @@
         protected ActionType type;
         protected InputSelectionType onStart;
         protected InputSelectionType onMouseOver;
-        protected int range = 1;
 
-        public void activate(Tile startLocation)
+        public void activate(Character actor)
         {
-            InputController.waitForInput(onStart, onMouseOver, range, act, startLocation);
+            InputController.waitForInput(onStart, onMouseOver, getRange(actor), act, actor.mapLocation);
         }
 
         protected abstract void act(Tile[] selection);
-
+        protected abstract int getRange(Character actor);
     }
 }

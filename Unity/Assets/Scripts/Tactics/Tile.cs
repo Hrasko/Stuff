@@ -3,19 +3,27 @@
     [System.Serializable]
     public class Tile : System.Object
     {
-        public const int INAREA = 1;
-        public const int SELECTED = 2;
-        public const int SELECTABLE = 3;
+        public const int INAREA = 0;
+        public const int SELECTED = 1;
+        public const int SELECTABLE = 2;
 
         public static Tile[] map;
+        public static int[][] graph;
         public static int mapSize;
+
+        public int moveCost = 0;
+        public int height = 0;
         
         /// <summary>
         /// Selectable,Selected,InArea
         /// </summary>
         public bool[] statusFlag = new bool[3];
 
-        public int x, y;
+        int _x;
+        int _y;
+
+        public int x { get { return this._x; } }
+        public int y { get { return this._y; } }
 
         public Tile(int index)
         {
@@ -23,8 +31,8 @@
             {
                 statusFlag[i] = false;
             }
-            this.x = index / mapSize;
-            this.y = index % mapSize;
+            this._x = index / mapSize;
+            this._y = index % mapSize;
         }
 
         public static Tile get(int row, int column)
