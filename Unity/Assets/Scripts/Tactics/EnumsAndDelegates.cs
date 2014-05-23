@@ -4,6 +4,12 @@
 
     public delegate void InputSelection(Tile selectedTile, int tileOptionsIndex);
 
+    public delegate int[][] GraphFactory();
+
+    public delegate Tile TileFactory(int index);
+
+    public delegate void voidDelegate();
+
     public enum ActionType
     {
         free,
@@ -25,7 +31,7 @@
         Single,
         Area,
         Cone,
-        Edition
+        EditionStart
     }
 
     public enum TargetingType

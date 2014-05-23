@@ -1,26 +1,36 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Tactics.InputController;
 
 namespace Tactics
 {
-    public delegate void EventHandler();
-
     public class GM : MonoBehaviour
     {
-        public static event EventHandler _show;
-
         public Atributtes[] initialAttributes;
-        
+
+        IInputController inputController;
+
         static GM master;
 
-		void Awake()
-		{
-			InputController.ResetInput();
-		}
+        public static IInputController input { get { return master.inputController; } }
+
 
         void Start()
-        {
+        {            
             master = this;			
+        }
+
+        public void StartBatlle()
+        {
+            inputController = new BattleController();
+            inputController.ResetInput();
+        }
+
+        public void StartMapEdition()
+        {
+            inputController = new MapEditController();
+            inputController.ResetInput();
+            inputController.waitForInput(InputSelectionType.EditionStart, InputSelectionType.None, 0, null, null);
         }
 
         /// <summary>
@@ -52,6 +62,8 @@ namespace Tactics
 
             return newC;
         }
+
+        
 
     }
 }

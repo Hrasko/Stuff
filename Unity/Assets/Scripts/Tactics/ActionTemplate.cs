@@ -9,7 +9,7 @@
 
         public void activate(Character actor)
         {
-            InputController.waitForInput(onStart, onMouseOver, getRange(actor), act, actor.mapLocation);
+            GM.input.waitForInput(onStart, onMouseOver, getRange(actor), act, actor.mapLocation);
         }
 
         protected abstract void act(Tile[] selection);

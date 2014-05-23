@@ -1,18 +1,17 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Tactics
+namespace Tactics.InputController
 {
-    [System.Serializable]
-    public class InputController : System.Object
+    public class BattleController : IInputController
     {
-        public static event InputSelection onStartInput;
-        public static event InputSelection onMouseOver;
+        public event InputSelection onStartInput;
+        public event InputSelection onMouseOver;
 		//public static event InputSelection onSelect;
         static InputCallback callback;
-        public static int range;
+        public int range;
 
-        public static void waitForInput(InputSelectionType onStart_, InputSelectionType onMouseOver_, int range_, InputCallback callback_, Tile startLocation)
+        public override void waitForInput(InputSelectionType onStart_, InputSelectionType onMouseOver_, int range_, InputCallback callback_, Tile startLocation)
         {
             onStartInput = switchSelection(onStart_);
             onMouseOver = switchSelection(onMouseOver_);
@@ -21,7 +20,7 @@ namespace Tactics
             OnInputStart(startLocation);
         }
 
-        public static void ResetInput()
+        public override void ResetInput()
         {
             onStartInput = DoNothing;
             onMouseOver = DoNothing;
@@ -29,23 +28,22 @@ namespace Tactics
             callback = null;
         }
 
-        public static InputSelection switchSelection(InputSelectionType type)
+        public override InputSelection switchSelection(InputSelectionType type)
         {
             switch (type)
             {
                 case InputSelectionType.Area: return AreaSelection;
                 case InputSelectionType.Single: return SingleTileSelection;
-                case InputSelectionType.Edition: return MapEdition;
                 default: return DoNothing;
             }
         }
 
         // Selection Area
-        public static void AreaSelection(Tile center, int tileStatusIndex)
+        public void AreaSelection(Tile center, int tileStatusIndex)
         {
             Tile.ResetEspecificMapStatus(tileStatusIndex);
-            int minX = center.x - range + 1;
-            int maxX = center.x + range - 1;
+            int minX = center.row - range + 1;
+            int maxX = center.row + range - 1;
             if (minX < 0)
             {
                 minX = 0;
@@ -55,8 +53,8 @@ namespace Tactics
                 maxX = Tile.mapSize;
             }
 
-            int minY = center.y - range + 1;
-            int maxY = center.y + range - 1;
+            int minY = center.column - range + 1;
+            int maxY = center.column + range - 1;
             if (minY < 0)
             {
                 minY = 0;
@@ -68,10 +66,10 @@ namespace Tactics
 
             for (int i = minX; i <= maxX; i++)
             {
-                int distX = System.Math.Abs(center.x - i);
+                int distX = System.Math.Abs(center.row - i);
                 for (int j = minY; j <= maxY; j++)
                 {
-                    int distY = System.Math.Abs(center.y - j);
+                    int distY = System.Math.Abs(center.column - j);
                     if (distX + distY < range)
                     {
                         Tile.get(i, j).statusFlag[tileStatusIndex] = true;
@@ -80,36 +78,24 @@ namespace Tactics
             }
         }
 
-        public static void SingleTileSelection(Tile center, int tileStatusIndex)
+        public void SingleTileSelection(Tile center, int tileStatusIndex)
         {
             Tile.ResetEspecificMapStatus(tileStatusIndex);
             center.statusFlag[tileStatusIndex] = true;
         }
 
-        public static void DoNothing(Tile center, int tileStatusIndex)
+        public void DoNothing(Tile center, int tileStatusIndex)
         {
 
-        }
-
-        public static void MapEdition(Tile center, int tileStatusIndex)
-        {
-            if (Input.GetKeyDown(KeyCode.Plus))
-            {
-                center.height += 1;
-            }
-            else if (Input.GetKeyDown(KeyCode.Minus))
-            {
-                center.height += 1;
-            }
         }
 
         // Events
-        public static void OnInputStart(Tile startLocation)
+        public override void OnInputStart(Tile startLocation)
         {
             onStartInput(startLocation, Tile.INAREA);
         }
 
-        public static void OnMouseOver(Tile tile)
+        public override void OnMouseOver(Tile tile)
         {
             if (tile.statusFlag[Tile.INAREA])
             {
@@ -121,13 +107,13 @@ namespace Tactics
             }
         }
 
-        public static void OnMouseSelect(Tile tile)
+        public override void OnMouseSelect(Tile tile)
         {
 			Tile.ResetEspecificMapStatus(Tile.SELECTED);
             Tile.changeStatus(Tile.SELECTABLE, Tile.SELECTED);
         }
 
-        public static void OnMouseConfirm(Tile tile)
+        public override void OnMouseConfirm(Tile tile)
         {
             List<Tile> list = Tile.getSelectedTiles();
             Tile.ResetMapStatus();

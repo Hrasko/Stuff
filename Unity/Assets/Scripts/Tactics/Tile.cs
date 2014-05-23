@@ -1,15 +1,32 @@
-﻿namespace Tactics
+﻿using UnityEngine;
+
+namespace Tactics
 {
     [System.Serializable]
     public class Tile : System.Object
     {
+        public event voidDelegate tileStatusChanged;
+        public event voidDelegate wallStatusEditionChanged;
+
         public const int INAREA = 0;
         public const int SELECTED = 1;
         public const int SELECTABLE = 2;
 
+        public const int NORTHWALL = 0;
+        public const int SOUTHWALL = 1;
+        public const int WESTWALL = 2;
+        public const int EASTWALL = 3;
+
+		public const int WALLGRAPHCOST = 10000;
+
         public static Tile[] map;
         public static int[][] graph;
         public static int mapSize;
+
+        /// <summary>
+        /// NORTHWALL, SOUTHWALL, WESTWALL, EASTWALL
+        /// </summary>
+        public bool[] walls;
 
         public int moveCost = 0;
         public int height = 0;
@@ -19,20 +36,70 @@
         /// </summary>
         public bool[] statusFlag = new bool[3];
 
-        int _x;
-        int _y;
+        int _row;
+        int _column;
+		int _index;
 
-        public int x { get { return this._x; } }
-        public int y { get { return this._y; } }
+        public int row { get { return this._row; } }
+        public int column { get { return this._column; } }
 
-        public Tile(int index)
+        public Tile()
         {
             for (int i = 0; i < statusFlag.Length; i++)
             {
                 statusFlag[i] = false;
             }
-            this._x = index / mapSize;
-            this._y = index % mapSize;
+            walls = new bool[4];
+            for (int i = 0; i < 4; i++)
+            {
+                walls[i] = false;
+            }
+        }
+
+        public void setIndex(int index)
+        {
+			this._index = index;
+            
+            this._row = index / mapSize;
+            this._column = index % mapSize;
+
+			UpdateGraph (_row, Tile.mapSize, NORTHWALL, index, _row + 1);
+			UpdateGraph (-(_row), 0, SOUTHWALL, index, _row - 1);
+			UpdateGraph (_column, Tile.mapSize, EASTWALL, index, _column + 1);
+			UpdateGraph (-(_column), 0, WESTWALL, index, _column - 1);
+
+        }
+
+		private void UpdateGraph(int rc,int limit, int constWall, int thisNode, int otherNode)
+		{
+			int value = 1;
+            
+			if (rc < limit)
+			{
+                Debug.Log(constWall);
+				if (walls [constWall]) {
+					value = WALLGRAPHCOST;
+				}
+				Tile.graph[thisNode][otherNode] = value;
+				Tile.graph[otherNode][thisNode] = value;
+				
+			}
+		}
+
+        public void invertWallStatus(int constIndex)
+        {
+            walls[constIndex] = !walls[constIndex];
+
+			UpdateGraph (_row, Tile.mapSize, NORTHWALL, _index, _row + 1);
+			UpdateGraph (-_row, 0, SOUTHWALL, _index, _row - 1);
+			UpdateGraph (_column, Tile.mapSize, EASTWALL, _index, _column + 1);
+			UpdateGraph (-_column, 0, WESTWALL, _index, _column - 1);
+
+            if (wallStatusEditionChanged != null)
+            {
+                
+                wallStatusEditionChanged();
+            }
         }
 
         public static Tile get(int row, int column)
@@ -48,6 +115,10 @@
                 {
                     map[i].statusFlag[previousFlag] = false;
                     map[i].statusFlag[newFlag] = true;
+                    if (map[i].tileStatusChanged != null)
+                    {
+                        map[i].tileStatusChanged();
+                    }
                 }
             }
         }
@@ -72,6 +143,10 @@
                 for (int j = 0; j < map[i].statusFlag.Length; j++)
                 {
                     map[i].statusFlag[j] = false;
+                    if (map[i].tileStatusChanged != null)
+                    {
+                        map[i].tileStatusChanged();
+                    }
                 }
             }
         }
@@ -80,7 +155,11 @@
         {
             for (int i = 0; i < map.Length; i++)
             {
-                map[i].statusFlag[index] = false;                
+                map[i].statusFlag[index] = false;
+                if (map[i].tileStatusChanged != null)
+                {
+                    map[i].tileStatusChanged();
+                }
             }
         }
     }
