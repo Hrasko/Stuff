@@ -28,10 +28,10 @@
     public enum InputSelectionType
     {
         None,
+		All,
         Single,
         Area,
-        Cone,
-        EditionStart
+        Cone
     }
 
     public enum TargetingType

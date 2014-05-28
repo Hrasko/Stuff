@@ -12,7 +12,9 @@ namespace Tactics.InputController
 
         public abstract void OnInputStart(Tile startLocation);
 
-        public abstract void OnMouseOver(Tile tile);
+		public abstract void MouseOverEnter(Tile tile);
+
+		public abstract void MouseOverStay(Tile tile);
 
         public abstract void OnMouseSelect(Tile tile);
 

@@ -6,15 +6,15 @@ namespace Tactics.InputController
     public class BattleController : IInputController
     {
         public event InputSelection onStartInput;
-        public event InputSelection onMouseOver;
+        public event InputSelection onMouseOverEnter;
 		//public static event InputSelection onSelect;
         static InputCallback callback;
         public int range;
 
-        public override void waitForInput(InputSelectionType onStart_, InputSelectionType onMouseOver_, int range_, InputCallback callback_, Tile startLocation)
+		public override void waitForInput(InputSelectionType onStart_, InputSelectionType onMouseOverEnter_, int range_, InputCallback callback_, Tile startLocation)
         {
             onStartInput = switchSelection(onStart_);
-            onMouseOver = switchSelection(onMouseOver_);
+			onMouseOverEnter = switchSelection(onMouseOverEnter_);
             range = range_;
             callback = callback_;
             OnInputStart(startLocation);
@@ -23,7 +23,7 @@ namespace Tactics.InputController
         public override void ResetInput()
         {
             onStartInput = DoNothing;
-            onMouseOver = DoNothing;
+            onMouseOverEnter = DoNothing;
             range = 1;
             callback = null;
         }
@@ -32,11 +32,19 @@ namespace Tactics.InputController
         {
             switch (type)
             {
+				case InputSelectionType.All: return SelectAll;
                 case InputSelectionType.Area: return AreaSelection;
                 case InputSelectionType.Single: return SingleTileSelection;
                 default: return DoNothing;
             }
         }
+
+		public void SelectAll(Tile tile, int tileStatusIndex)
+		{
+			for (int i = 0; i < Tile.map.Length; i++) {
+				Tile.map[i].setFlag(tileStatusIndex,true);
+			}
+		}
 
         // Selection Area
         public void AreaSelection(Tile center, int tileStatusIndex)
@@ -72,7 +80,7 @@ namespace Tactics.InputController
                     int distY = System.Math.Abs(center.column - j);
                     if (distX + distY < range)
                     {
-                        Tile.get(i, j).statusFlag[tileStatusIndex] = true;
+                        Tile.get(i, j).setFlag(tileStatusIndex,true);
                     }
                 }
             }
@@ -81,7 +89,7 @@ namespace Tactics.InputController
         public void SingleTileSelection(Tile center, int tileStatusIndex)
         {
             Tile.ResetEspecificMapStatus(tileStatusIndex);
-            center.statusFlag[tileStatusIndex] = true;
+            center.setFlag(tileStatusIndex,true);
         }
 
         public void DoNothing(Tile center, int tileStatusIndex)
@@ -95,17 +103,19 @@ namespace Tactics.InputController
             onStartInput(startLocation, Tile.INAREA);
         }
 
-        public override void OnMouseOver(Tile tile)
+        public override void MouseOverEnter(Tile tile)
         {
-            if (tile.statusFlag[Tile.INAREA])
+			Tile.ResetEspecificMapStatus(Tile.SELECTABLE);
+            if (tile.status(Tile.INAREA))
             {
-                onMouseOver(tile, Tile.SELECTABLE);
-            }
-            else
-            {
-                Tile.ResetEspecificMapStatus(Tile.SELECTABLE);
+                onMouseOverEnter(tile, Tile.SELECTABLE);
             }
         }
+
+		public override void MouseOverStay (Tile tile)
+		{
+
+		}
 
         public override void OnMouseSelect(Tile tile)
         {

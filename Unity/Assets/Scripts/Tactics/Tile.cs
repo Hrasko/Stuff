@@ -34,7 +34,7 @@ namespace Tactics
         /// <summary>
         /// Selectable,Selected,InArea
         /// </summary>
-        public bool[] statusFlag = new bool[3];
+        bool[] statusFlag = new bool[3];
 
         int _row;
         int _column;
@@ -55,6 +55,20 @@ namespace Tactics
                 walls[i] = false;
             }
         }
+
+		public void setFlag(int flag, bool value)
+		{
+			statusFlag [flag] = value;
+			if (tileStatusChanged != null)
+			{
+				tileStatusChanged();
+			}
+		}
+
+		public bool status(int flag)
+		{
+			return statusFlag [flag];
+		}
 
         public void setIndex(int index)
         {
@@ -91,9 +105,9 @@ namespace Tactics
             walls[constIndex] = !walls[constIndex];
 
 			UpdateGraph (_row, Tile.mapSize, NORTHWALL, _index, _row + 1);
-			UpdateGraph (-_row, 0, SOUTHWALL, _index, _row - 1);
+			UpdateGraph (-(_row), 0, SOUTHWALL, _index, _row - 1);
 			UpdateGraph (_column, Tile.mapSize, EASTWALL, _index, _column + 1);
-			UpdateGraph (-_column, 0, WESTWALL, _index, _column - 1);
+			UpdateGraph (-(_column), 0, WESTWALL, _index, _column - 1);
 
             if (wallStatusEditionChanged != null)
             {

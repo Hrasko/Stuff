@@ -28,11 +28,11 @@ public class TileBehaviour:MonoBehaviour {
 	
 	// Update is called once per frame
 	void UpdateTileGraphics () {
-		if (_tile.statusFlag [Tile.SELECTED]) {
+		if (_tile.status(Tile.SELECTED)) {
 				renderer.material.color = Color.red;
-		} else if (_tile.statusFlag [Tile.SELECTABLE]) {
+		} else if (_tile.status(Tile.SELECTABLE)) {
 				renderer.material.color = Color.yellow;
-		} else if (_tile.statusFlag [Tile.INAREA]) {
+		} else if (_tile.status(Tile.INAREA)) {
 				renderer.material.color = Color.blue;
 		} else {
 				renderer.material.color = Color.white;
@@ -43,40 +43,29 @@ public class TileBehaviour:MonoBehaviour {
 
     void UpdateWallStatus()
     {
-        if (_tile.walls[Tile.NORTHWALL])
-        {
-            Walls[NWALL].renderer.enabled = true;
-            Walls[NWWALL].renderer.enabled = true;
-            Walls[NEWALL].renderer.enabled = true;
-        }
-        if (_tile.walls[Tile.SOUTHWALL])
-        {
-            Walls[SWALL].renderer.enabled = true;
-            Walls[SWWALL].renderer.enabled = true;
-            Walls[SEWALL].renderer.enabled = true;
-        }
-        if (_tile.walls[Tile.EASTWALL])
-        {
-            Walls[NEWALL].renderer.enabled = true;
-            Walls[EWALL].renderer.enabled = true;
-            Walls[SEWALL].renderer.enabled = true;
-        }
-        if (_tile.walls[Tile.WESTWALL])
-        {
-            Walls[NWWALL].renderer.enabled = true;
-            Walls[WWALL].renderer.enabled = true;
-            Walls[SWWALL].renderer.enabled = true;
-        }
+		Walls[NWALL].renderer.enabled = _tile.walls[Tile.NORTHWALL];
+		Walls[EWALL].renderer.enabled = _tile.walls[Tile.EASTWALL];
+		Walls[SWALL].renderer.enabled = _tile.walls[Tile.SOUTHWALL];
+		Walls[WWALL].renderer.enabled = _tile.walls[Tile.WESTWALL];
+
+		Walls[NWWALL].renderer.enabled = _tile.walls[Tile.NORTHWALL] || _tile.walls[Tile.WESTWALL];
+		Walls[SWWALL].renderer.enabled = _tile.walls[Tile.SOUTHWALL] || _tile.walls[Tile.WESTWALL];
+		Walls[SEWALL].renderer.enabled = _tile.walls[Tile.SOUTHWALL] || _tile.walls[Tile.EASTWALL];
+		Walls[NEWALL].renderer.enabled = _tile.walls[Tile.NORTHWALL] || _tile.walls[Tile.EASTWALL];
     }
 
 	
-	void OnMouseOver()
+	void enterMouseOver()
 	{
-		Debug.Log (name);
-		GM.input.OnMouseOver(_tile);
+		GM.input.MouseOverEnter(_tile);
 	}
 
-	void OnMouseDown()
+	void stayMouseOver()
+	{
+		GM.input.MouseOverStay(_tile);
+	}
+
+	void onMouseClick()
 	{
         GM.input.OnMouseSelect(_tile);
 	}

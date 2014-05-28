@@ -7,11 +7,11 @@ using Tactics;
 /// </summary>
 public class StartBehaviour : MonoBehaviour {
 
-    public string startGM;
-    public string startMap;
+	public string[] startFunctions;
 	// Use this for initialization
 	void Start () {
-        gameObject.SendMessage(startGM);
-        gameObject.SendMessage(startMap);
+		for (int i = 0; i < startFunctions.Length; i++) {
+			gameObject.SendMessage(startFunctions[i]);	
+		}
 	}
 }

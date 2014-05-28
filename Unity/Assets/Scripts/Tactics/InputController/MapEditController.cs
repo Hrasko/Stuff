@@ -4,25 +4,9 @@ namespace Tactics.InputController
 {
     public class MapEditController : BattleController
     {
-        public override InputSelection switchSelection(InputSelectionType type)
-        {
-			switch (type) 
-			{
-			case InputSelectionType.EditionStart: return (SelectAll);
-			default: return (MapEdition);
-			}
-            
-        }
-
-		public void SelectAll(Tile tile, int tileStatusIndex)
+		public override void MouseOverStay (Tile tile)
 		{
-			for (int i = 0; i < Tile.map.Length; i++) {
-				Tile.map[i].statusFlag[Tile.INAREA] = true;
-			}
-		}
-
-        public void MapEdition(Tile tile, int tileStatusIndex)
-        {
+			if (tile.status(Tile.SELECTABLE))
             if (Input.GetKeyDown(KeyCode.Plus))
             {
                 tile.height += 1;

@@ -5,7 +5,7 @@ using Tactics;
 public class MapBehaviour : MonoBehaviour {
 	public int size;
 	public GameObject tilePrefab;
-    
+	public int layerTile = 1 << 8;
     int totalNodes;
 
 	// Use this for initialization
@@ -19,7 +19,7 @@ public class MapBehaviour : MonoBehaviour {
         createMap(createBattleTile);
     }
 
-    public void StartMapEdition()
+    public void StartCleanMapEdition()
     {
         startCleanMap();
     }
@@ -104,6 +104,24 @@ public class MapBehaviour : MonoBehaviour {
         Util.Serializer.SaveXMLString("tiles", Tile.map, typeof(Tile[]));
         Debug.Log("saved tiles");
     }
+
+	public string lastTile = "";
+	void Update()
+	{
+		RaycastHit hit;
+		Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
+		if (Physics.Raycast(ray,out hit,layerTile)){
+			if (lastTile != hit.collider.name){
+				hit.collider.SendMessage("enterMouseOver");
+				lastTile = hit.collider.name;
+			}else{
+				hit.collider.SendMessage("stayMouseOver");
+			}
+			if (Input.GetMouseButtonDown (0)) {
+				hit.collider.SendMessage("mouseClick");
+			}
+		}
+	}
 
     void OnGUI()
     {

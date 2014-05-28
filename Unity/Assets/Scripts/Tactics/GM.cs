@@ -20,17 +20,17 @@ namespace Tactics
             master = this;			
         }
 
-        public void StartBatlle()
+        public void StartGMBatlle()
         {
             inputController = new BattleController();
             inputController.ResetInput();
         }
 
-        public void StartMapEdition()
+        public void StartGMMapEdition()
         {
             inputController = new MapEditController();
             inputController.ResetInput();
-            inputController.waitForInput(InputSelectionType.EditionStart, InputSelectionType.None, 0, null, null);
+            inputController.waitForInput(InputSelectionType.All, InputSelectionType.Single, 0, null, null);
         }
 
         /// <summary>
