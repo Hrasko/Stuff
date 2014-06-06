@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using Tactics;
 
 public class TileBehaviour:MonoBehaviour {
-	
+
     public const int NWALL = 0;
     public const int EWALL = 1;
     public const int SWALL = 2;
@@ -23,7 +23,7 @@ public class TileBehaviour:MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
+        
 	}
 	
 	// Update is called once per frame
@@ -65,9 +65,13 @@ public class TileBehaviour:MonoBehaviour {
 		GM.input.MouseOverStay(_tile);
 	}
 
-	void onMouseClick()
+	void mouseClick()
 	{
-        GM.input.OnMouseSelect(_tile);
+		if (_tile.status (Tile.SELECTED)) {
+			GM.input.OnMouseConfirm (_tile);
+		}else if (_tile.status (Tile.SELECTABLE)) {
+			GM.input.OnMouseSelect (_tile);
+		}        
 	}
 
     public void setTile(Tile newTile)

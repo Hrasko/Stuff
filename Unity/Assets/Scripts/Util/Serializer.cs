@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Xml.Serialization;
+
 namespace Util
 {
     public class Serializer
@@ -35,7 +36,9 @@ namespace Util
 
         public static object LoadXMLString(string where, Type T)
         {
-            return fromXMLString(UnityEngine.PlayerPrefs.GetString(where),T);
+            string st = UnityEngine.PlayerPrefs.GetString(where);
+            //UnityEngine.Debug.Log("loaded " + where + ":" + st);
+            return fromXMLString(st,T);
         }
 
 

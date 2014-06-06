@@ -31,7 +31,9 @@
 		All,
         Single,
         Area,
-        Cone
+        Cone,
+		DijkstraPreparation,
+		DijkstraPath
     }
 
     public enum TargetingType

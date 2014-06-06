@@ -22,7 +22,7 @@ namespace Tactics
         public static Tile[] map;
         public static int[][] graph;
         public static int mapSize;
-
+        public static int totalNodes;
         /// <summary>
         /// NORTHWALL, SOUTHWALL, WESTWALL, EASTWALL
         /// </summary>
@@ -34,20 +34,20 @@ namespace Tactics
         /// <summary>
         /// Selectable,Selected,InArea
         /// </summary>
-        bool[] statusFlag = new bool[3];
-
-        int _row;
-        int _column;
-		int _index;
+        public bool[] _statusFlag = new bool[3];
+        
+        public int _row;
+        public int _column;
+		public int _index;
 
         public int row { get { return this._row; } }
         public int column { get { return this._column; } }
 
         public Tile()
         {
-            for (int i = 0; i < statusFlag.Length; i++)
+            for (int i = 0; i < _statusFlag.Length; i++)
             {
-                statusFlag[i] = false;
+                _statusFlag[i] = false;
             }
             walls = new bool[4];
             for (int i = 0; i < 4; i++)
@@ -58,7 +58,7 @@ namespace Tactics
 
 		public void setFlag(int flag, bool value)
 		{
-			statusFlag [flag] = value;
+			_statusFlag [flag] = value;
 			if (tileStatusChanged != null)
 			{
 				tileStatusChanged();
@@ -67,7 +67,7 @@ namespace Tactics
 
 		public bool status(int flag)
 		{
-			return statusFlag [flag];
+			return _statusFlag [flag];
 		}
 
         public void setIndex(int index)
@@ -76,21 +76,49 @@ namespace Tactics
             
             this._row = index / mapSize;
             this._column = index % mapSize;
-
-			UpdateGraph (_row, Tile.mapSize, NORTHWALL, index, _row + 1);
-			UpdateGraph (-(_row), 0, SOUTHWALL, index, _row - 1);
-			UpdateGraph (_column, Tile.mapSize, EASTWALL, index, _column + 1);
-			UpdateGraph (-(_column), 0, WESTWALL, index, _column - 1);
-
         }
 
-		private void UpdateGraph(int rc,int limit, int constWall, int thisNode, int otherNode)
+        public static int[][] CreateCleanGraph()
+        {
+            int[][] graph = new int[totalNodes][];
+            // Start graph
+            for (int i = 0; i < totalNodes; i++)
+            {
+                graph[i] = new int[totalNodes];
+                for (int k = 0; k < totalNodes; k++)
+                {
+                    graph[i][k] = Tile.WALLGRAPHCOST;
+                }
+            }
+            return graph;
+        }
+
+        public static void UpdateWholeGraph()
+        {
+            graph = CreateCleanGraph();
+            for (int i = 0; i < map.Length; i++)
+            {
+                if (map[i] != null)
+                {
+                    map[i].UpdateGraphCosts();
+                }
+            }
+        }
+
+        private void UpdateGraphCosts()
+        {
+            UpdateGraphCosts(_row, Tile.mapSize, NORTHWALL, _index, _row + 1);
+            UpdateGraphCosts(-(_row), 0, SOUTHWALL, _index, _row - 1);
+            UpdateGraphCosts(_column, Tile.mapSize, EASTWALL, _index, _column + 1);
+            UpdateGraphCosts(-(_column), 0, WESTWALL, _index, _column - 1);
+        }
+
+        private void UpdateGraphCosts(int rc, int limit, int constWall, int thisNode, int otherNode)
 		{
 			int value = 1;
             
 			if (rc < limit)
 			{
-                Debug.Log(constWall);
 				if (walls [constWall]) {
 					value = WALLGRAPHCOST;
 				}
@@ -103,11 +131,6 @@ namespace Tactics
         public void invertWallStatus(int constIndex)
         {
             walls[constIndex] = !walls[constIndex];
-
-			UpdateGraph (_row, Tile.mapSize, NORTHWALL, _index, _row + 1);
-			UpdateGraph (-(_row), 0, SOUTHWALL, _index, _row - 1);
-			UpdateGraph (_column, Tile.mapSize, EASTWALL, _index, _column + 1);
-			UpdateGraph (-(_column), 0, WESTWALL, _index, _column - 1);
 
             if (wallStatusEditionChanged != null)
             {
@@ -125,10 +148,10 @@ namespace Tactics
         {
             for (int i = 0; i < map.Length; i++)
             {
-                if (map[i].statusFlag[previousFlag])
+                if (map[i]._statusFlag[previousFlag])
                 {
-                    map[i].statusFlag[previousFlag] = false;
-                    map[i].statusFlag[newFlag] = true;
+                    map[i]._statusFlag[previousFlag] = false;
+                    map[i]._statusFlag[newFlag] = true;
                     if (map[i].tileStatusChanged != null)
                     {
                         map[i].tileStatusChanged();
@@ -142,7 +165,7 @@ namespace Tactics
             System.Collections.Generic.List<Tile> list = new System.Collections.Generic.List<Tile>();
             for (int i = 0; i < map.Length; i++)
             {
-                if (map[i].statusFlag[SELECTED])
+                if (map[i]._statusFlag[SELECTED])
                 {
                     list.Add(map[i]);
                 }
@@ -154,9 +177,9 @@ namespace Tactics
         {
             for (int i = 0; i < map.Length; i++)
             {
-                for (int j = 0; j < map[i].statusFlag.Length; j++)
+                for (int j = 0; j < map[i]._statusFlag.Length; j++)
                 {
-                    map[i].statusFlag[j] = false;
+                    map[i]._statusFlag[j] = false;
                     if (map[i].tileStatusChanged != null)
                     {
                         map[i].tileStatusChanged();
@@ -169,7 +192,7 @@ namespace Tactics
         {
             for (int i = 0; i < map.Length; i++)
             {
-                map[i].statusFlag[index] = false;
+                map[i]._statusFlag[index] = false;
                 if (map[i].tileStatusChanged != null)
                 {
                     map[i].tileStatusChanged();

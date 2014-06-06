@@ -1,4 +1,4 @@
-﻿namespace Tactics
+namespace Tactics
 {
     [System.Serializable]
     public abstract class ActionTemplate : System.Object
@@ -14,5 +14,6 @@
 
         protected abstract void act(Tile[] selection);
         protected abstract int getRange(Character actor);
+		public abstract string name();
     }
 }

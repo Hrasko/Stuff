@@ -4,13 +4,15 @@ using Tactics;
 
 public class MapBehaviour : MonoBehaviour {
 	public int size;
+    public int floors = 1;
 	public GameObject tilePrefab;
 	public int layerTile = 1 << 8;
-    int totalNodes;
+	public string mapName = "nomemapa";
+	public string lastTile = "";
 
 	// Use this for initialization
 	void Awake () {
-        totalNodes = size * size;
+        Tile.totalNodes = size * size * floors;
 	}
 
     public void StartBatlle()
@@ -38,21 +40,12 @@ public class MapBehaviour : MonoBehaviour {
 
     private int[][] createCleanGraph()
     {
-        int[][] graph  = new int[totalNodes][];
-        // Start graph
-        for (int i = 0; i < totalNodes; i++)
-        {
-            graph[i] = new int[totalNodes];
-            for (int k = 0; k < totalNodes; k++)
-            {
-                graph[i][k] = Tile.WALLGRAPHCOST;
-            }
-        }
-        return graph;
+        return Tile.CreateCleanGraph();
     }
 
     private void startCleanMap()
     {
+        Tile.map = new Tile[Tile.totalNodes];
         Tile.graph = createCleanGraph();
         createMap(createCleanTile);
         for (int i = 0; i < size; i++)
@@ -67,7 +60,6 @@ public class MapBehaviour : MonoBehaviour {
 
 	private void createMap(TileFactory tileFactory)
 	{
-		Tile.map = new Tile[totalNodes];
         Tile.mapSize = size;
 		float tileSize = tilePrefab.transform.localScale.x;
 		Vector3 posicao = new Vector3 (transform.position.x, transform.position.y, transform.position.z);               
@@ -91,21 +83,21 @@ public class MapBehaviour : MonoBehaviour {
 
     public void LoadMap()
     {
-        Tile.graph = Util.Serializer.LoadXMLString("graph",typeof(int[][])) as int[][];
+		Tile.graph = Util.Serializer.LoadXMLString("graph" + mapName, typeof(int[][])) as int[][];
         Debug.Log("loaded graph");
-        Tile.map = Util.Serializer.LoadXMLString("tiles", typeof(Tile[])) as Tile[];
-        Debug.Log("loaded tiles");
+		Tile.map = Util.Serializer.LoadXMLString("tiles" + mapName, typeof(Tile[])) as Tile[];
+        Debug.Log("loaded tiles");        
     }
 
     public void SaveMap()
     {
-        Util.Serializer.SaveXMLString("graph", Tile.graph, typeof(int[][]));
+        Tile.UpdateWholeGraph();
+		Util.Serializer.SaveXMLString("graph" + mapName, Tile.graph, typeof(int[][]));
         Debug.Log("saved graph");
-        Util.Serializer.SaveXMLString("tiles", Tile.map, typeof(Tile[]));
+		Util.Serializer.SaveXMLString("tiles" + mapName, Tile.map, typeof(Tile[]));
         Debug.Log("saved tiles");
     }
 
-	public string lastTile = "";
 	void Update()
 	{
 		RaycastHit hit;
@@ -122,13 +114,5 @@ public class MapBehaviour : MonoBehaviour {
 			}
 		}
 	}
-
-    void OnGUI()
-    {
-        if (GUI.Button(new Rect(10, 10, 100, 30), "save"))
-        {
-            SaveMap();
-        }
-    }
 
 }

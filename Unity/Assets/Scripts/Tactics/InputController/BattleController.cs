@@ -35,6 +35,8 @@ namespace Tactics.InputController
 				case InputSelectionType.All: return SelectAll;
                 case InputSelectionType.Area: return AreaSelection;
                 case InputSelectionType.Single: return SingleTileSelection;
+				case InputSelectionType.DijkstraPreparation: return DijstraPreparation;
+				case InputSelectionType.DijkstraPath: return DijstraPath;
                 default: return DoNothing;
             }
         }
@@ -46,7 +48,130 @@ namespace Tactics.InputController
 			}
 		}
 
-        // Selection Area
+#region Selection Area
+		public int[] dijkstraIndexes;
+		public int[] dijkstraBefore;
+		public void DijstraPreparation(Tile center, int tileStatusIndex)
+		{
+			Tile.ResetEspecificMapStatus(tileStatusIndex);
+			// we have to take only the subgraph 
+			int minX = center.row - range + 1;
+			int maxX = center.row + range - 1;
+			if (minX < 0)
+			{
+				minX = 0;
+			}
+			if (maxX > Tile.mapSize)
+			{
+				maxX = Tile.mapSize;
+			}
+			
+			int minY = center.column - range + 1;
+			int maxY = center.column + range - 1;
+			if (minY < 0)
+			{
+				minY = 0;
+			}
+			if (maxY > Tile.mapSize)
+			{
+				maxY = Tile.mapSize;
+			}
+			int totalDijkstraNodes = maxX + maxY - minX - minY;
+			dijkstraIndexes = new int[totalDijkstraNodes];
+			dijkstraBefore = new int[totalDijkstraNodes];
+			int k = 0;
+			for (int i = minX; i <= maxX; i++)
+			{
+				int distX = System.Math.Abs(center.row - i);
+				for (int j = minY; j <= maxY; j++)
+				{
+					int distY = System.Math.Abs(center.column - j);
+					if (distX + distY < range)
+					{
+						Debug.Log (k);
+						dijkstraIndexes[k] = Tile.get(i, j)._index;
+						dijkstraBefore[k] = k;
+						k++;
+					}
+				}
+			}
+
+			// Here begins AStar
+			int thisNode = -1;
+			bool HaveFalse = true;
+			int[] costs = new int[totalDijkstraNodes];
+			bool[] visited = new bool[totalDijkstraNodes];
+			for (int i = 0; i < totalDijkstraNodes; i++) {
+				if (dijkstraIndexes[i] == center._index)
+				{
+					visited[i] = true;
+					thisNode = i;
+					costs[i] = 0;
+				}
+				else
+				{
+					visited[i] = false;
+					costs[i] = Tile.WALLGRAPHCOST;
+				}
+			}
+			//main loop
+			while (HaveFalse) 
+			{
+				int min = Tile.WALLGRAPHCOST;
+				int minIndex = -1;
+				for (int i = 0; i < totalDijkstraNodes; i++) {
+					if (!visited[i]){
+						int thatNode = dijkstraIndexes[i];
+						int beforeThatNode = dijkstraBefore[i];
+						if (Tile.graph[thisNode][thatNode] + costs[beforeThatNode] < costs[i])
+						{
+							dijkstraIndexes[i] = thisNode;
+							costs[i] = Tile.graph[thisNode][thatNode] + costs[beforeThatNode];
+							if (costs[i] < min)
+							{
+								min = costs[i];
+								minIndex = i;
+							}
+						}
+					}
+				}
+
+				visited[minIndex] = true;
+				thisNode = dijkstraIndexes[minIndex];
+				//check if we are done
+				HaveFalse = false;
+				for (int i = 0; i < totalDijkstraNodes; i++) {
+					if (!visited[i])
+					{
+						HaveFalse = true;
+						break;
+					}
+				}
+			}
+
+			for (int i = 0; i < totalDijkstraNodes; i++) {
+				Tile.map[dijkstraIndexes[i]].setFlag(tileStatusIndex,true);
+			}
+		}
+
+		public void DijstraPath(Tile center, int tileStatusIndex)
+		{
+			Tile.ResetEspecificMapStatus(tileStatusIndex);
+			int target = GM.CurrentPlayer.mapLocation._index;
+			int current = center._index;
+			Tile.map[current].setFlag(tileStatusIndex,true);
+			while (current != target) 
+			{
+				for (int i = 0; i < dijkstraIndexes.Length; i++) {
+					if (dijkstraIndexes[i] == current)
+					{
+						current = dijkstraBefore[i];
+						break;
+					}
+				}
+			}
+		}
+
         public void AreaSelection(Tile center, int tileStatusIndex)
         {
             Tile.ResetEspecificMapStatus(tileStatusIndex);
@@ -96,8 +221,8 @@ namespace Tactics.InputController
         {
 
         }
-
-        // Events
+#endregion
+#region Events
         public override void OnInputStart(Tile startLocation)
         {
             onStartInput(startLocation, Tile.INAREA);
@@ -130,6 +255,7 @@ namespace Tactics.InputController
             callback(list.ToArray());
             ResetInput();
         }
+#endregion
 
     }
 }

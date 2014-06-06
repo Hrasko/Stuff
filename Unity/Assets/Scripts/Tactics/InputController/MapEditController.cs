@@ -34,7 +34,7 @@ namespace Tactics.InputController
 			else if (Input.GetKeyDown(KeyCode.D))
 			{
 				tile.invertWallStatus(Tile.EASTWALL);
-				if (tile.column < Tile.mapSize)
+				if (tile.column < Tile.mapSize-1)
 				{
 					Tile.get(tile.row, tile.column + 1).invertWallStatus(Tile.WESTWALL);
 				}

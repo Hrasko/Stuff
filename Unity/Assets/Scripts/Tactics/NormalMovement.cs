@@ -5,8 +5,8 @@
         public NormalMovement(): base()
         {
             type = ActionType.movement;
-            onStart = InputSelectionType.Area;
-            onMouseOver = InputSelectionType.Single;
+            onStart = InputSelectionType.DijkstraPreparation;
+            onMouseOver = InputSelectionType.DijkstraPath;
         }
 
         protected override void act(Tile[] selection)
@@ -18,5 +18,10 @@
         {
             return actor.Speed;
         }
+
+		public override string name ()
+		{
+			return "Movement";
+		}
     }
 }
