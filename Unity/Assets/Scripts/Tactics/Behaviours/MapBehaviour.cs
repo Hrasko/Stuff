@@ -69,12 +69,10 @@ public class MapBehaviour : MonoBehaviour {
 		for (int i = 0; i < size; i++) {
 			posicao.x = tileSize*i;
 
-
 			for (int j = 0; j < size; j++) {
 				posicao.z = tileSize*j;
 
 				int index = i*size+j;
-				
 
 				GameObject go = Instantiate(tilePrefab,posicao,Quaternion.identity) as GameObject;
                 go.SendMessage("setTile", tileFactory(index));

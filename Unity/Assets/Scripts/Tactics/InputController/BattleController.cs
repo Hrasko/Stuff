@@ -119,9 +119,10 @@ namespace Tactics.InputController
 					dijkstraDistance[i] = 1;
 				}
 			}
-			// Initiate the before vector
+			// Initiate the cost and before vectors
 			dijkstraBefore = new int[totalDijkstraNodes];
 			for (int i = 0; i < totalDijkstraNodes; i++) {
+				costs[i] = Tile.graph[dijkstraIndexes[thisNodeIndex]][dijkstraIndexes[i]];
 				dijkstraBefore[i] = thisNodeIndex;
 			}
 
@@ -160,20 +161,23 @@ namespace Tactics.InputController
 			}
 
 			for (int i = 0; i < totalDijkstraNodes; i++) {
-				Tile.map[dijkstraIndexes[i]].setFlag(tileStatusIndex,true);
+				Stack<int> pilha = GetDijstraPath(Tile.map[dijkstraIndexes[i]]);
+				while (pilha.Count > 0){
+					Tile.map[pilha.Pop()].setFlag(tileStatusIndex,true);
+				}
 			}
 		}
 
-		public void DijstraPath(Tile center, int tileStatusIndex)
+		private Stack<int> GetDijstraPath(Tile target)
 		{
-			Tile.ResetEspecificMapStatus(tileStatusIndex);
-			int target = GM.CurrentPlayer.mapLocation._index;
-			int current = center._index;
+			int begin = GM.CurrentPlayer.mapLocation._index;
+			int current = target._index;
 			int tries = 0;
-			while (current != target && tries < range) 
+			Stack<int> myPath = new Stack<int> ();
+			while (current != begin && tries < Tile.totalNodes) 
 			{
 				tries++;
-				Tile.map[current].setFlag(tileStatusIndex,true);
+				myPath.Push(current);
 				for (int i = 0; i < dijkstraIndexes.Length; i++) {
 					if (dijkstraIndexes[i] == current)
 					{
@@ -182,6 +186,17 @@ namespace Tactics.InputController
 					}
 				}
 			}
+			myPath.Push(begin);
+			return myPath;
+		}
+
+		public void DijstraPath(Tile center, int tileStatusIndex)
+		{
+			Tile.ResetEspecificMapStatus(tileStatusIndex);
+			Stack<int> pilha = GetDijstraPath(center);
+			while (pilha.Count > 0) {
+								Tile.map [pilha.Pop()].setFlag (tileStatusIndex, true);
+						}
 		}
 
         public void AreaSelection(Tile center, int tileStatusIndex)

@@ -87,7 +87,11 @@ namespace Tactics
                 graph[i] = new int[totalNodes];
                 for (int k = 0; k < totalNodes; k++)
                 {
-                    graph[i][k] = Tile.WALLGRAPHCOST;
+					if (i == k){
+						graph[i][k] = 0;
+					}else{
+                    	graph[i][k] = Tile.WALLGRAPHCOST;
+					}
                 }
             }
             return graph;
@@ -107,24 +111,25 @@ namespace Tactics
 
         private void UpdateGraphCosts()
         {
-            UpdateGraphCosts(_row, Tile.mapSize, NORTHWALL, _index, _row + 1);
-            UpdateGraphCosts(-(_row), 0, SOUTHWALL, _index, _row - 1);
-            UpdateGraphCosts(_column, Tile.mapSize, EASTWALL, _index, _column + 1);
-            UpdateGraphCosts(-(_column), 0, WESTWALL, _index, _column - 1);
+            UpdateGraphCosts(_row, Tile.mapSize-1, NORTHWALL, _index, _row + 1, _column);
+            UpdateGraphCosts(-(_row), 0, SOUTHWALL, _index, _row - 1,_column);
+            UpdateGraphCosts(_column, Tile.mapSize-1, EASTWALL, _index, _row, _column + 1);
+            UpdateGraphCosts(-(_column), 0, WESTWALL, _index, _row, _column - 1);
+
         }
 
-        private void UpdateGraphCosts(int rc, int limit, int constWall, int thisNode, int otherNode)
+        private void UpdateGraphCosts(int rc, int limit, int constWall, int thisNode, int otherX, int otherY)
 		{
 			int value = 1;
             
 			if (rc < limit)
 			{
+				int otherNode = Tile.get(otherX,otherY)._index;
 				if (walls [constWall]) {
 					value = WALLGRAPHCOST;
 				}
 				Tile.graph[thisNode][otherNode] = value;
 				Tile.graph[otherNode][thisNode] = value;
-				
 			}
 		}
 
@@ -139,9 +144,10 @@ namespace Tactics
             }
         }
 
-        public static Tile get(int row, int column)
+        public static Tile get(int row_, int column_)
         {
-            return map[row * mapSize + column];
+			Debug.Log (row_ + ":" + column_);
+            return map[row_ * mapSize + column_];
         }
 
         public static void changeStatus(int previousFlag, int newFlag)
