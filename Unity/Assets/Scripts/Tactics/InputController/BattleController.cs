@@ -22,6 +22,7 @@ namespace Tactics.InputController
 
         public override void ResetInput()
         {
+			Tile.ResetMapStatus ();
             onStartInput = DoNothing;
             onMouseOverEnter = DoNothing;
             range = 1;
@@ -51,6 +52,7 @@ namespace Tactics.InputController
 #region Selection Area
 		public int[] dijkstraIndexes;
 		public int[] dijkstraBefore;
+
 		public void DijstraPreparation(Tile center, int tileStatusIndex)
 		{
 			Tile.ResetEspecificMapStatus(tileStatusIndex);
@@ -61,25 +63,25 @@ namespace Tactics.InputController
 			{
 				minX = 0;
 			}
-			if (maxX > Tile.mapSize)
+			if (maxX >= Tile.mapSize)
 			{
-				maxX = Tile.mapSize;
+				maxX = Tile.mapSize - 1;
 			}
 			
 			int minY = center.column - range + 1;
 			int maxY = center.column + range - 1;
+
 			if (minY < 0)
 			{
 				minY = 0;
 			}
-			if (maxY > Tile.mapSize)
+			if (maxY >= Tile.mapSize)
 			{
-				maxY = Tile.mapSize;
+				maxY = Tile.mapSize - 1;
 			}
-			int totalDijkstraNodes = maxX + maxY - minX - minY;
-			dijkstraIndexes = new int[totalDijkstraNodes];
-			dijkstraBefore = new int[totalDijkstraNodes];
-			int k = 0;
+
+			List<int> listIndexes = new List<int> ();
+
 			for (int i = minX; i <= maxX; i++)
 			{
 				int distX = System.Math.Abs(center.row - i);
@@ -88,63 +90,71 @@ namespace Tactics.InputController
 					int distY = System.Math.Abs(center.column - j);
 					if (distX + distY < range)
 					{
-						Debug.Log (k);
-						dijkstraIndexes[k] = Tile.get(i, j)._index;
-						dijkstraBefore[k] = k;
-						k++;
+						Debug.Log(listIndexes.Count + ":" + i + ":" + j + ":"+Tile.get(i, j)._index);
+						listIndexes.Add(Tile.get(i, j)._index);
 					}
 				}
 			}
+			dijkstraIndexes = listIndexes.ToArray ();
+			int totalDijkstraNodes = dijkstraIndexes.Length;
+			// Here begins Dijkstra
+			int thisNodeIndex = -1;
 
-			// Here begins AStar
-			int thisNode = -1;
-			bool HaveFalse = true;
+			int[] dijkstraDistance = new int[totalDijkstraNodes];
 			int[] costs = new int[totalDijkstraNodes];
-			bool[] visited = new bool[totalDijkstraNodes];
+			int[] state = new int[totalDijkstraNodes]; // 0 not visited, 1 open, 2 visited
+
 			for (int i = 0; i < totalDijkstraNodes; i++) {
 				if (dijkstraIndexes[i] == center._index)
 				{
-					visited[i] = true;
-					thisNode = i;
+					state[i] = 2;
+					thisNodeIndex = i;
 					costs[i] = 0;
+					dijkstraDistance[i] = 0;
 				}
 				else
 				{
-					visited[i] = false;
-					costs[i] = Tile.WALLGRAPHCOST;
+					state[i] = 0;
+
+					dijkstraDistance[i] = 1;
 				}
 			}
+			// Initiate the before vector
+			dijkstraBefore = new int[totalDijkstraNodes];
+			for (int i = 0; i < totalDijkstraNodes; i++) {
+				dijkstraBefore[i] = thisNodeIndex;
+			}
+
 			//main loop
-			while (HaveFalse) 
+			for (int k = 0; k < totalDijkstraNodes; k++)
 			{
-				int min = Tile.WALLGRAPHCOST;
-				int minIndex = -1;
+				state[thisNodeIndex] = 2;
 				for (int i = 0; i < totalDijkstraNodes; i++) {
-					if (!visited[i]){
+					if (state[i] < 2) // not visited
+					{
+						int thisNode = dijkstraIndexes[thisNodeIndex];
 						int thatNode = dijkstraIndexes[i];
-						int beforeThatNode = dijkstraBefore[i];
-						if (Tile.graph[thisNode][thatNode] + costs[beforeThatNode] < costs[i])
+						if (state[i] == 0 && Tile.graph[thisNode][thatNode] < Tile.WALLGRAPHCOST)
 						{
-							dijkstraIndexes[i] = thisNode;
-							costs[i] = Tile.graph[thisNode][thatNode] + costs[beforeThatNode];
-							if (costs[i] < min)
+							state[i] = 1;
+							if (Tile.graph[thisNode][thatNode] + costs[dijkstraBefore[i]] <= costs[i])
 							{
-								min = costs[i];
-								minIndex = i;
+								dijkstraBefore[i] = thisNodeIndex;
+								costs[i] = Tile.graph[thisNode][thatNode] + costs[dijkstraBefore[i]];
 							}
 						}
 					}
 				}
 
-				visited[minIndex] = true;
-				thisNode = dijkstraIndexes[minIndex];
-				//check if we are done
-				HaveFalse = false;
+				// Do we have to continue?
+				int min = Tile.WALLGRAPHCOST;
+				int minIndex = -1;
 				for (int i = 0; i < totalDijkstraNodes; i++) {
-					if (!visited[i])
+					if (state[i] < 2 && costs[i] <= min)
 					{
-						HaveFalse = true;
-						break;
+						minIndex = i;
+						min = costs[i];
+						thisNodeIndex = minIndex;
 					}
 				}
 			}
@@ -159,13 +169,15 @@ namespace Tactics.InputController
 			Tile.ResetEspecificMapStatus(tileStatusIndex);
 			int target = GM.CurrentPlayer.mapLocation._index;
 			int current = center._index;
-			Tile.map[current].setFlag(tileStatusIndex,true);
-			while (current != target) 
+			int tries = 0;
+			while (current != target && tries < range) 
 			{
+				tries++;
+				Tile.map[current].setFlag(tileStatusIndex,true);
 				for (int i = 0; i < dijkstraIndexes.Length; i++) {
 					if (dijkstraIndexes[i] == current)
 					{
-						current = dijkstraBefore[i];
+						current = dijkstraIndexes[dijkstraBefore[i]];
 						break;
 					}
 				}
@@ -181,9 +193,9 @@ namespace Tactics.InputController
             {
                 minX = 0;
             }
-            if (maxX > Tile.mapSize)
+            if (maxX >= Tile.mapSize)
             {
-                maxX = Tile.mapSize;
+                maxX = Tile.mapSize-1;
             }
 
             int minY = center.column - range + 1;
@@ -192,9 +204,9 @@ namespace Tactics.InputController
             {
                 minY = 0;
             }
-            if (maxY > Tile.mapSize)
+            if (maxY >= Tile.mapSize)
             {
-                maxY = Tile.mapSize;
+                maxY = Tile.mapSize-1;
             }
 
             for (int i = minX; i <= maxX; i++)

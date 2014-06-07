@@ -21,9 +21,11 @@ namespace Tactics
 
         public void StartGMBatlle()
         {
+			Debug.Log ("stargmbattlebegin");
 			master = this;
             inputController = new BattleController();
             inputController.ResetInput();
+			Debug.Log ("stargmbattleend");
         }
 
         public void StartGMMapEdition()
@@ -39,7 +41,8 @@ namespace Tactics
         /// </summary>
         public void sampletest1()
         {
-            GameObject go =  Instantiate (Resources.Load("CharTest"), transform.position, transform.rotation) as GameObject;
+			Debug.Log ("stbegin");
+            GameObject go =  Instantiate (Resources.Load("CharTest"), new Vector3(50,0,30), transform.rotation) as GameObject;
 			go.SendMessage ("setCharacter", newCharacter());
 			Character character = go.GetComponent<CharacterBehaviour> ().details;
 			character.baseSpeed = 6;
@@ -47,6 +50,7 @@ namespace Tactics
 			characters = new Character[1];
 			characters[0] = character;
 			Beginturn ();
+			Debug.Log ("stend");
         }
 
         public static void action()

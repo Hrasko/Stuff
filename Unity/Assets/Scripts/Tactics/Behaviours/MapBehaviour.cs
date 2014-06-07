@@ -17,8 +17,10 @@ public class MapBehaviour : MonoBehaviour {
 
     public void StartBatlle()
     {
+		Debug.Log ("starbattlebegin");
         LoadMap();
         createMap(createBattleTile);
+		Debug.Log ("starbattleend");
     }
 
     public void StartCleanMapEdition()
@@ -76,7 +78,8 @@ public class MapBehaviour : MonoBehaviour {
 
 				GameObject go = Instantiate(tilePrefab,posicao,Quaternion.identity) as GameObject;
                 go.SendMessage("setTile", tileFactory(index));
-				go.name = "Tile"+i+","+j;				
+				go.name = "Tile"+i+","+j;
+				go.SendMessage("UpdateWallStatus");
 			}
 		}
 	}
