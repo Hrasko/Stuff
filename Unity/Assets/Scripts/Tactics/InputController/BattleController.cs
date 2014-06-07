@@ -162,8 +162,11 @@ namespace Tactics.InputController
 
 			for (int i = 0; i < totalDijkstraNodes; i++) {
 				Stack<int> pilha = GetDijstraPath(Tile.map[dijkstraIndexes[i]]);
-				while (pilha.Count > 0){
-					Tile.map[pilha.Pop()].setFlag(tileStatusIndex,true);
+				int currentCost = 0;
+				while (pilha.Count > 1 && currentCost <= range){
+					int currentIndex = pilha.Pop();
+					Tile.map[currentIndex].setFlag(tileStatusIndex,true);
+					//currentCost += Tile.graph[dijkstraIndexes[currentIndex]][dijkstraIndexes[dijkstraBefore[currentIndex]]];
 				}
 			}
 		}
@@ -173,17 +176,22 @@ namespace Tactics.InputController
 			int begin = GM.CurrentPlayer.mapLocation._index;
 			int current = target._index;
 			int tries = 0;
+			float currentCost = 0;
 			Stack<int> myPath = new Stack<int> ();
-			while (current != begin && tries < Tile.totalNodes) 
+			while (current != begin && tries < Tile.totalNodes && currentCost <= range) 
 			{
 				tries++;
-				myPath.Push(current);
+
 				for (int i = 0; i < dijkstraIndexes.Length; i++) {
 					if (dijkstraIndexes[i] == current)
 					{
 						current = dijkstraIndexes[dijkstraBefore[i]];
+						currentCost += Tile.graph[dijkstraIndexes[i]][dijkstraIndexes[dijkstraBefore[i]]];
 						break;
 					}
+				}
+				if (currentCost <= range){
+					myPath.Push(current);
 				}
 			}
 			myPath.Push(begin);
