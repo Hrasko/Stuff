@@ -44,8 +44,8 @@ namespace Tactics.InputController
 
 		public void SelectAll(Tile tile, int tileStatusIndex)
 		{
-			for (int i = 0; i < Tile.map.Length; i++) {
-				Tile.map[i].setFlag(tileStatusIndex,true);
+			for (int i = 0; i < Tile.all.Count; i++) {
+				Tile.all[i].setFlag(tileStatusIndex,true);
 			}
 		}
 
@@ -81,20 +81,18 @@ namespace Tactics.InputController
 			}
 
 			List<int> listIndexes = new List<int> ();
+            Vector3 centerPosition = new Vector3(
+                center._row * Tile.tileSize,
+                center._column * Tile.tileSize,
+                0);
 
-			for (int i = minX; i <= maxX; i++)
-			{
-				int distX = System.Math.Abs(center.row - i);
-				for (int j = minY; j <= maxY; j++)
-				{
-					int distY = System.Math.Abs(center.column - j);
-					if (distX + distY < range)
-					{
-						Debug.Log(listIndexes.Count + ":" + i + ":" + j + ":"+Tile.get(i, j)._index);
-						listIndexes.Add(Tile.get(i, j)._index);
-					}
-				}
-			}
+            Collider[] tilesInArea = Physics.OverlapSphere(centerPosition, range * Tile.tileSize, Tile.layerTile);
+            for (int i = 0; i < tilesInArea.Length; i++)
+            {
+                Tile tileInArea = tilesInArea[i].gameObject.GetComponent<TileBehaviour>()._tile;
+                listIndexes.Add(tileInArea._index);
+            }
+
 			dijkstraIndexes = listIndexes.ToArray ();
 			int totalDijkstraNodes = dijkstraIndexes.Length;
 			// Here begins Dijkstra
@@ -122,7 +120,7 @@ namespace Tactics.InputController
 			// Initiate the cost and before vectors
 			dijkstraBefore = new int[totalDijkstraNodes];
 			for (int i = 0; i < totalDijkstraNodes; i++) {
-				costs[i] = Tile.graph[dijkstraIndexes[thisNodeIndex]][dijkstraIndexes[i]];
+				costs[i] = Tile.graphCost(dijkstraIndexes[thisNodeIndex],dijkstraIndexes[i]);
 				dijkstraBefore[i] = thisNodeIndex;
 			}
 
@@ -135,13 +133,14 @@ namespace Tactics.InputController
 					{
 						int thisNode = dijkstraIndexes[thisNodeIndex];
 						int thatNode = dijkstraIndexes[i];
-						if (state[i] == 0 && Tile.graph[thisNode][thatNode] < Tile.WALLGRAPHCOST)
+                        int cost = Tile.graphCost(thisNode, thatNode);
+						if (state[i] == 0 && cost < Tile.WALLGRAPHCOST)
 						{
 							state[i] = 1;
-							if (Tile.graph[thisNode][thatNode] + costs[dijkstraBefore[i]] <= costs[i])
+                            if (cost + costs[dijkstraBefore[i]] <= costs[i])
 							{
 								dijkstraBefore[i] = thisNodeIndex;
-								costs[i] = Tile.graph[thisNode][thatNode] + costs[dijkstraBefore[i]];
+                                costs[i] = cost + costs[dijkstraBefore[i]];
 							}
 						}
 					}
@@ -161,11 +160,11 @@ namespace Tactics.InputController
 			}
 
 			for (int i = 0; i < totalDijkstraNodes; i++) {
-				Stack<int> pilha = GetDijstraPath(Tile.map[dijkstraIndexes[i]]);
+				Stack<int> pilha = GetDijstraPath(Tile.all[dijkstraIndexes[i]]);
 				int currentCost = 0;
 				while (pilha.Count > 1 && currentCost <= range){
 					int currentIndex = pilha.Pop();
-					Tile.map[currentIndex].setFlag(tileStatusIndex,true);
+					Tile.all[currentIndex].setFlag(tileStatusIndex,true);
 					//currentCost += Tile.graph[dijkstraIndexes[currentIndex]][dijkstraIndexes[dijkstraBefore[currentIndex]]];
 				}
 			}
@@ -186,7 +185,7 @@ namespace Tactics.InputController
 					if (dijkstraIndexes[i] == current)
 					{
 						current = dijkstraIndexes[dijkstraBefore[i]];
-						currentCost += Tile.graph[dijkstraIndexes[i]][dijkstraIndexes[dijkstraBefore[i]]];
+						currentCost += Tile.graphCost(dijkstraIndexes[i],dijkstraIndexes[dijkstraBefore[i]]);
 						break;
 					}
 				}
@@ -203,46 +202,23 @@ namespace Tactics.InputController
 			Tile.ResetEspecificMapStatus(tileStatusIndex);
 			Stack<int> pilha = GetDijstraPath(center);
 			while (pilha.Count > 0) {
-								Tile.map [pilha.Pop()].setFlag (tileStatusIndex, true);
+								Tile.all[pilha.Pop()].setFlag (tileStatusIndex, true);
 						}
 		}
 
         public void AreaSelection(Tile center, int tileStatusIndex)
         {
             Tile.ResetEspecificMapStatus(tileStatusIndex);
-            int minX = center.row - range + 1;
-            int maxX = center.row + range - 1;
-            if (minX < 0)
-            {
-                minX = 0;
-            }
-            if (maxX >= Tile.mapSize)
-            {
-                maxX = Tile.mapSize-1;
-            }
+            Vector3 centerPosition = new Vector3(
+                center._row * Tile.tileSize,
+                center._column * Tile.tileSize,
+                0);
 
-            int minY = center.column - range + 1;
-            int maxY = center.column + range - 1;
-            if (minY < 0)
+            Collider[] tilesInArea = Physics.OverlapSphere(centerPosition, range * Tile.tileSize, Tile.layerTile);
+            for (int i = 0; i < tilesInArea.Length; i++)
             {
-                minY = 0;
-            }
-            if (maxY >= Tile.mapSize)
-            {
-                maxY = Tile.mapSize-1;
-            }
-
-            for (int i = minX; i <= maxX; i++)
-            {
-                int distX = System.Math.Abs(center.row - i);
-                for (int j = minY; j <= maxY; j++)
-                {
-                    int distY = System.Math.Abs(center.column - j);
-                    if (distX + distY < range)
-                    {
-                        Tile.get(i, j).setFlag(tileStatusIndex,true);
-                    }
-                }
+                Tile tileInArea = tilesInArea[i].gameObject.GetComponent<TileBehaviour>()._tile;
+                tileInArea.setFlag(tileStatusIndex, true);
             }
         }
 

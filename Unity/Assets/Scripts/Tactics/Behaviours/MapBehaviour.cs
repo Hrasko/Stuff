@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Tactics;
+using System.Collections.Generic;
 
 public class MapBehaviour : MonoBehaviour {
 	public int size;
     public int floors = 1;
 	public GameObject tilePrefab;
-	public int layerTile = 1 << 8;
 	public string mapName = "nomemapa";
 	public string lastTile = "";
 
@@ -30,7 +30,7 @@ public class MapBehaviour : MonoBehaviour {
 
     private Tile createBattleTile(int index)
     {
-        return Tile.map[index];
+        return Tile.all[index];
     }
 
     private Tile createCleanTile(int index)
@@ -47,30 +47,22 @@ public class MapBehaviour : MonoBehaviour {
 
     private void startCleanMap()
     {
-        Tile.map = new Tile[Tile.totalNodes];
-        Tile.graph = createCleanGraph();
-        createMap(createCleanTile);
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                GameObject go = GameObject.Find("Tile" + i + "," + j);
-                Tile.map[i * size + j] = go.GetComponent<TileBehaviour>().Tile;
-            }
-        }        
+        createMap(createCleanTile);     
     }
 
 	private void createMap(TileFactory tileFactory)
 	{
+		
+		Debug.Log ("1");
         Tile.mapSize = size;
-		float tileSize = tilePrefab.transform.localScale.x;
+		Tile.tileSize = tilePrefab.transform.localScale.x;
 		Vector3 posicao = new Vector3 (transform.position.x, transform.position.y, transform.position.z);               
 
 		for (int i = 0; i < size; i++) {
-			posicao.x = tileSize*i;
+            posicao.x = Tile.tileSize * i;
 
 			for (int j = 0; j < size; j++) {
-				posicao.z = tileSize*j;
+                posicao.z = Tile.tileSize * j;
 
 				int index = i*size+j;
 
@@ -80,22 +72,39 @@ public class MapBehaviour : MonoBehaviour {
 				go.SendMessage("UpdateWallStatus");
 			}
 		}
+		
+		Debug.Log ("1");
 	}
 
     public void LoadMap()
     {
-		Tile.graph = Util.Serializer.LoadXMLString("graph" + mapName, typeof(int[][])) as int[][];
-        Debug.Log("loaded graph");
-		Tile.map = Util.Serializer.LoadXMLString("tiles" + mapName, typeof(Tile[])) as Tile[];
+        Tile.all = Util.Serializer.LoadXMLString("tiles" + mapName, typeof(List<Tile>)) as List<Tile>;
         Debug.Log("loaded tiles");        
     }
 
     public void SaveMap()
     {
-        Tile.UpdateWholeGraph();
-		Util.Serializer.SaveXMLString("graph" + mapName, Tile.graph, typeof(int[][]));
-        Debug.Log("saved graph");
-		Util.Serializer.SaveXMLString("tiles" + mapName, Tile.map, typeof(Tile[]));
+        for (int i = 0; i < Tile.all.Count; i++)
+        {
+            if (Tile.all[i].walls[Tile.NORTHWALL])
+            {
+                Tile.all[i].edgeNorth = -1;
+            }
+            if (Tile.all[i].walls[Tile.EASTWALL])
+            {
+                Tile.all[i].edgeEast = -1;
+            }
+            if (Tile.all[i].walls[Tile.SOUTHWALL])
+            {
+                Tile.all[i].edgeSouth = -1;
+            }
+            if (Tile.all[i].walls[Tile.WESTWALL])
+            {
+                Tile.all[i].edgeWest = -1;
+            }
+        }
+
+        Util.Serializer.SaveXMLString("tiles" + mapName, Tile.all, typeof(List<Tile>));
         Debug.Log("saved tiles");
     }
 
@@ -103,7 +112,8 @@ public class MapBehaviour : MonoBehaviour {
 	{
 		RaycastHit hit;
 		Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-		if (Physics.Raycast(ray,out hit,layerTile)){
+        if (Physics.Raycast(ray, out hit, Tile.layerTile))
+        {
 			if (lastTile != hit.collider.name){
 				hit.collider.SendMessage("enterMouseOver");
 				lastTile = hit.collider.name;

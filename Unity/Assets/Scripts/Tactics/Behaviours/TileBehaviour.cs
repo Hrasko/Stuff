@@ -22,10 +22,25 @@ public class TileBehaviour:MonoBehaviour {
 	}
 
 	// Use this for initialization
-	void Start () {
-        
+	void Awake () {
+		_tile = null;
 	}
-	
+
+	void OnGUI()
+	{
+		/*
+		if (_tile._column < Tile.mapSize) {
+						int n = Tile.graph[_tile._index][Tile.get (_tile.row, _tile._column + 1)._index];
+				} else {
+					int n = -1;
+				}
+		string info = string.Format("n:{0}e:{1}s:{2}w:{3}",n
+
+		Vector3 namePlatePos = Camera.main.WorldToScreenPoint(gameObject.transform.position);  
+		GUI.Label(Rect((namePlatePos.x-50), (Screen.height - namePlatePos.y+10), 100, 50), info);
+		*/
+	}
+
 	// Update is called once per frame
 	void UpdateTileGraphics () {
 		if (_tile.status(Tile.SELECTED)) {

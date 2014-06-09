@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Tactics
 {
@@ -19,10 +20,12 @@ namespace Tactics
 
 		public const int WALLGRAPHCOST = 10000;
 
-        public static Tile[] map;
-        public static int[][] graph;
+        public static List<Tile> all = new List<Tile>();
+
         public static int mapSize;
         public static int totalNodes;
+        public static int layerTile = 1 << 8;
+        public static float tileSize;
         /// <summary>
         /// NORTHWALL, SOUTHWALL, WESTWALL, EASTWALL
         /// </summary>
@@ -30,31 +33,19 @@ namespace Tactics
 
         public int moveCost = 0;
         public int height = 0;
-        
+
+        public int edgeNorth = -1, edgeSouth = -1, edgeWest = -1, edgeEast = -1;
+
         /// <summary>
         /// Selectable,Selected,InArea
         /// </summary>
         public bool[] _statusFlag = new bool[3];
-        
         public int _row;
         public int _column;
 		public int _index;
 
         public int row { get { return this._row; } }
         public int column { get { return this._column; } }
-
-        public Tile()
-        {
-            for (int i = 0; i < _statusFlag.Length; i++)
-            {
-                _statusFlag[i] = false;
-            }
-            walls = new bool[4];
-            for (int i = 0; i < 4; i++)
-            {
-                walls[i] = false;
-            }
-        }
 
 		public void setFlag(int flag, bool value)
 		{
@@ -72,10 +63,37 @@ namespace Tactics
 
         public void setIndex(int index)
         {
+			Tile.all.Add (this);
+			for (int i = 0; i < _statusFlag.Length; i++) {
+				_statusFlag [i] = false;
+			}
+			walls = new bool[4];
+			for (int i = 0; i < 4; i++) {
+				walls [i] = false;
+			}
+
 			this._index = index;
             
             this._row = index / mapSize;
             this._column = index % mapSize;
+            
+            if (this._column > 0)
+            {
+				this.edgeWest = _row*mapSize + _column - 1;
+            }
+            if (this._row < mapSize-1)
+            {
+				this.edgeSouth = (_row + 1)*mapSize + _column;
+            }
+            if (this._column < mapSize - 1)
+            {
+				this.edgeEast = _row * mapSize + _column + 1;
+            }
+            if (this._row > 0)
+            {
+				this.edgeNorth = (_row - 1)*mapSize + _column;
+            }
+            
         }
 
         public static int[][] CreateCleanGraph()
@@ -97,6 +115,31 @@ namespace Tactics
             return graph;
         }
 
+        public static int graphCost(int from, int to)
+        {
+			if (Tile.all[from].edgeNorth >=0 && Tile.all[Tile.all[from].edgeNorth] == Tile.all[from])
+            {
+                return 1;
+            }
+            else
+				if (Tile.all[from].edgeEast >=0 && Tile.all[Tile.all[from].edgeEast] == Tile.all[from])
+                {
+                    return 1;
+                }
+                else
+				if (Tile.all[from].edgeSouth >=0 && Tile.all[Tile.all[from].edgeSouth] == Tile.all[from])
+                    {
+                        return 1;
+                    }
+                    else
+				if (Tile.all[from].edgeWest >=0 && Tile.all[Tile.all[from].edgeWest] == Tile.all[from])
+                        {
+                            return 1;
+                        }
+            return WALLGRAPHCOST;
+        }
+
+        /*
         public static void UpdateWholeGraph()
         {
             graph = CreateCleanGraph();
@@ -132,6 +175,7 @@ namespace Tactics
 				Tile.graph[otherNode][thisNode] = value;
 			}
 		}
+         * */
 
         public void invertWallStatus(int constIndex)
         {
@@ -139,28 +183,58 @@ namespace Tactics
 
             if (wallStatusEditionChanged != null)
             {
-                
                 wallStatusEditionChanged();
             }
         }
 
-        public static Tile get(int row_, int column_)
+        public static Tile get(int index_)
         {
-			Debug.Log (row_ + ":" + column_);
-            return map[row_ * mapSize + column_];
+            return all[index_];
+        }
+
+        public static Tile getNorth(int index_)
+        {
+			if (all [index_].edgeNorth >= 0) {
+								return Tile.all [all [index_].edgeNorth];
+						}
+			return null;
+        }
+
+        public static Tile getEast(int index_)
+        {
+			if (all [index_].edgeEast >= 0) {
+				return Tile.all [all [index_].edgeEast];
+			}
+			return null;
+        }
+
+        public static Tile getSouth(int index_)
+        {
+			if (all [index_].edgeSouth >= 0) {
+				return Tile.all [all [index_].edgeSouth];
+			}
+			return null;
+        }
+
+        public static Tile getWest(int index_)
+        {
+			if (all [index_].edgeWest >= 0) {
+				return Tile.all [all [index_].edgeWest];
+			}
+			return null;
         }
 
         public static void changeStatus(int previousFlag, int newFlag)
         {
-            for (int i = 0; i < map.Length; i++)
+            for (int i = 0; i < all.Count; i++)
             {
-                if (map[i]._statusFlag[previousFlag])
+                if (all[i]._statusFlag[previousFlag])
                 {
-                    map[i]._statusFlag[previousFlag] = false;
-                    map[i]._statusFlag[newFlag] = true;
-                    if (map[i].tileStatusChanged != null)
+                    all[i]._statusFlag[previousFlag] = false;
+                    all[i]._statusFlag[newFlag] = true;
+                    if (all[i].tileStatusChanged != null)
                     {
-                        map[i].tileStatusChanged();
+                        all[i].tileStatusChanged();
                     }
                 }
             }
@@ -169,11 +243,11 @@ namespace Tactics
         public static System.Collections.Generic.List<Tile> getSelectedTiles()
         {
             System.Collections.Generic.List<Tile> list = new System.Collections.Generic.List<Tile>();
-            for (int i = 0; i < map.Length; i++)
+            for (int i = 0; i < all.Count; i++)
             {
-                if (map[i]._statusFlag[SELECTED])
+                if (all[i]._statusFlag[SELECTED])
                 {
-                    list.Add(map[i]);
+                    list.Add(all[i]);
                 }
             }
             return list;
@@ -181,14 +255,14 @@ namespace Tactics
 
         public static void ResetMapStatus()
         {
-            for (int i = 0; i < map.Length; i++)
+            for (int i = 0; i < all.Count; i++)
             {
-                for (int j = 0; j < map[i]._statusFlag.Length; j++)
+                for (int j = 0; j < all[i]._statusFlag.Length; j++)
                 {
-                    map[i]._statusFlag[j] = false;
-                    if (map[i].tileStatusChanged != null)
+                    all[i]._statusFlag[j] = false;
+                    if (all[i].tileStatusChanged != null)
                     {
-                        map[i].tileStatusChanged();
+                        all[i].tileStatusChanged();
                     }
                 }
             }
@@ -196,12 +270,12 @@ namespace Tactics
 
         public static void ResetEspecificMapStatus(int index)
         {
-            for (int i = 0; i < map.Length; i++)
+            for (int i = 0; i < all.Count; i++)
             {
-                map[i]._statusFlag[index] = false;
-                if (map[i].tileStatusChanged != null)
+                all[i]._statusFlag[index] = false;
+                if (all[i].tileStatusChanged != null)
                 {
-                    map[i].tileStatusChanged();
+                    all[i].tileStatusChanged();
                 }
             }
         }

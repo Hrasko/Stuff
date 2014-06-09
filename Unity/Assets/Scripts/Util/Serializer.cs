@@ -37,7 +37,7 @@ namespace Util
         public static object LoadXMLString(string where, Type T)
         {
             string st = UnityEngine.PlayerPrefs.GetString(where);
-            //UnityEngine.Debug.Log("loaded " + where + ":" + st);
+            UnityEngine.Debug.Log("loaded " + where + ":" + st);
             return fromXMLString(st,T);
         }
 
